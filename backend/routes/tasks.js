@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task');
+const auth = require('../middleware/auth');
 
-// Get all tasks
-router.get('/', async (req, res) => {
+// Get all tasks for authenticated user
+router.get('/', auth, async (req, res) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find({ userId: req.userId });
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -13,8 +14,11 @@ router.get('/', async (req, res) => {
 });
 
 // Add a task
-router.post('/', async (req, res) => {
-  const task = new Task(req.body);
+router.post('/', auth, async (req, res) => {
+  const task = new Task({
+    ...req.body,
+    userId: req.userId
+  });
   try {
     const newTask = await task.save();
     res.status(201).json(newTask);
@@ -24,8 +28,12 @@ router.post('/', async (req, res) => {
 });
 
 // Edit a task
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   try {
+    const task = await Task.findOne({ _id: req.params.id, userId: req.userId });
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
     const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(updatedTask);
   } catch (err) {
@@ -34,8 +42,12 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a task
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
+    const task = await Task.findOne({ _id: req.params.id, userId: req.userId });
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
     await Task.findByIdAndDelete(req.params.id);
     res.json({ message: 'Task deleted' });
   } catch (err) {
@@ -44,9 +56,12 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Mark as complete/incomplete
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', auth, async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({ _id: req.params.id, userId: req.userId });
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
     task.status = req.body.status;
     await task.save();
     res.json(task);
@@ -55,10 +70,10 @@ router.patch('/:id/status', async (req, res) => {
   }
 });
 
-// Clear all tasks
-router.delete('/', async (req, res) => {
+// Clear all tasks for authenticated user
+router.delete('/', auth, async (req, res) => {
   try {
-    await Task.deleteMany();
+    await Task.deleteMany({ userId: req.userId });
     res.json({ message: 'All tasks cleared' });
   } catch (err) {
     res.status(500).json({ message: err.message });

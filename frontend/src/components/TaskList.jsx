@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import TaskForm from './TaskForm';
 import { formatDistanceToNow } from 'date-fns';
+import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const TaskList = () => {
   const [tasks, setTasks] = useState([]);
@@ -9,6 +11,7 @@ const TaskList = () => {
   const [search, setSearch] = useState('');
   const [editingTask, setEditingTask] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     fetchTasks();
@@ -117,9 +120,37 @@ const TaskList = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
       <div className="max-w-6xl mx-auto px-4">
-        {/* Header */}
+        {/* Header with User Info and Logout */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Task Manager</h1>
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-4">
+              <Link
+                to="/notes"
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
+              >
+                📝 Notes
+              </Link>
+              <Link
+                to="/workflows"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
+              >
+                📅 Workflows
+              </Link>
+            </div>
+            <h1 className="text-4xl font-bold text-gray-800">Task Manager</h1>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-gray-600">Welcome back,</p>
+                <p className="font-semibold text-gray-800">{user?.name}</p>
+              </div>
+              <button
+                onClick={logout}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
           <p className="text-gray-600">Stay organized and productive</p>
         </div>
 
