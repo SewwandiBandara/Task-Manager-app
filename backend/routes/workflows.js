@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Workflow = require('../models/Workflow');
 const auth = require('../middleware/auth');
+const User = require('../models/User');
+const { sendWorkflowNotification } = require('../services/emailService');
 
 // Get all workflows for authenticated user
 router.get('/', auth, async (req, res) => {
@@ -52,6 +54,13 @@ router.post('/', auth, async (req, res) => {
     });
 
     const newWorkflow = await workflow.save();
+
+    // Send email notification to user
+    const user = await User.findById(req.userId);
+    if (user && user.emailNotifications) {
+      await sendWorkflowNotification(user.email, user.name, newWorkflow);
+    }
+
     res.status(201).json(newWorkflow);
   } catch (err) {
     res.status(400).json({ message: err.message });

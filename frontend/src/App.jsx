@@ -7,6 +7,7 @@ import Notes from './components/Notes';
 import Workflows from './components/Workflows';
 import ProtectedRoute from './components/ProtectedRoute';
 
+
 function App() {
   return (
     <Router>
